@@ -1,32 +1,53 @@
+
 import requests
+from urllib.parse import urlparse, urlunparse
+import argparse
 from lxml import html
 
-url = 'https://pastebin.com/archive'
+active_url = urlparse("https://www.pastebin.com/")
 
-#res = requests.get('https://google.com')
+parser = argparse.ArgumentParser(description='description of program here')
+parser.add_argument('arg_name', help='Help message for the do argument')
+parser.add_argument('-p', '--pasteid', help='specify the unique paste path id')
+parser.add_argument('-t', '--tryconnect', action='store_true', help='try the connection')
+args = parser.parse_args()
 
-res = requests.get(url=url)
-print(res)
+arg_value = args.arg_name
+arg_pasteid = args.pasteid
+arg_tryconnect = args.tryconnect
 
-print("Moving on to the if statement")
+def getUrl(pasteUniquePathId):
+    temp_url_tuple = active_url._replace(path=pasteUniquePathId)
+    return urlunparse(temp_url_tuple)
 
-# Check if the request was successful
-if res.status_code == 200:
-    # Parse the HTML content
-    tree = html.fromstring(res.content)
+def getPastePageBytes(full_url):
+    return requests.get(full_url)
 
-    # Iterate over the range of XPath elements you provided
-    for i in range(2, 52):
+def pageParser(pastePage):
+    tree = html.fromstring(pastePage.content)
+    xpath = "/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[3]/div[1]/h1/text()"
+    element = tree.xpath(xpath)
+    if element:
+        text = element[0].text
+        print(f'title of paste: {text}')
+    
+def main():
+    
+    if arg_value and arg_pasteid:
+        print(arg_pasteid)
         
-        xpath = f'/html/body/div[1]/div[2]/div[1]/div[1]/div[3]/table/tbody/tr[{i}]'
+        my_url = getUrl(arg_pasteid)
         
-        element = tree.xpath(xpath)
-        
-        if element:
-            # Extract the text of the element
-            text = element[0].text
+        if arg_tryconnect:
+            res = getPastePageBytes(my_url)
             
-            # Print the extracted text
-            print(text)
+            print(f'my_input: {arg_pasteid}  |  my_url: {my_url}  |  page_status_code: {res.status_code}\n')
+
+            if res.status_code == 200:
+                pageParser(res)
+            #print(res.text)
+        else:
+            print(f'my_input: {arg_pasteid}  |  my_url: {my_url}  |  page_status_code: N/A')
             
-print("Done.")
+if __name__ == "__main__":
+    main()
