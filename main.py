@@ -49,9 +49,7 @@ def pageParser(pastePage):
             element = elements[0]
             print(f'Found: {element.strip()}')
             result_dict[variable] = str(element).strip()
-                
-    #print('\t'.join(result_dict.values()))
-    
+            
     return result_dict
 
 def main():
