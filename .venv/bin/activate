@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/home/mu/Development/github/PastebinScraper/.venv"
+VIRTUAL_ENV="/home/mu/Development/github/pastebin-monitor/.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

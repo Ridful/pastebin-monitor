@@ -1,4 +1,4 @@
-#!/home/mu/Development/github/PastebinScraper/.venv/bin/python3
+#!/home/mu/Development/github/pastebin-monitor/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
