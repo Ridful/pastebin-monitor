@@ -4,24 +4,30 @@ from urllib.parse import urlparse, urlunparse
 import argparse
 from lxml import html
 
-active_url = urlparse("https://www.pastebin.com/")
+base_url = urlparse("https://www.pastebin.com/")
+
+default_headers = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36',
+    'Content-Type': 'text/html'
+}
 
 parser = argparse.ArgumentParser(description='description of program here')
-parser.add_argument('scan', help='Help message for the do argument')
-parser.add_argument('-p', '--pasteid', help='specify the unique paste path id')
-parser.add_argument('-e', '--extractinfo', action='store_true', help='try the connection')
+parser.add_argument('paste', help='handle operations and options for chosen Paste')
+parser.add_argument('-i', '--pasteid', help='Specify the unique Id associated with the Paste')
+parser.add_argument('-m', '--metadata', action='store_true', help='Get the Information/Metadata available about the Paste')
+parser.add_argument('-dR', '--downloadRaw', action='store_true', help='Option to download the Raw Paste ..')
 args = parser.parse_args()
 
-arg_value = args.scan
+arg_value = args.paste
 arg_pasteid = args.pasteid
-arg_extractinfo = args.extractinfo
-#get_raw_paste = args.getrawpaste
+arg_metadata = args.metadata
+arg_downloadRaw = args.downloadRaw
 
 def getUrl(pasteUniquePathId):
-    temp_url_tuple = active_url._replace(path=pasteUniquePathId)
+    temp_url_tuple = base_url._replace(path=pasteUniquePathId)
     return urlunparse(temp_url_tuple)
 
-def getPastePageBytes(full_url):
+def getPasteReqResp(full_url):
     return requests.get(full_url)
 
 def pageParser(pastePage):
@@ -52,23 +58,36 @@ def pageParser(pastePage):
             
     return result_dict
 
+def getInfoAboutPaste(paste_url, action = "print"):
+    
+    res = getPasteReqResp(paste_url)
+    
+    if res.status_code == 200:
+        result_dict = pageParser(res)
+        for key,value in result_dict.items():
+            if action == "print":
+                print(f'{key}: {value}')
+            else: pass #f'{key}: {value}'
+    
+    print(f'my_input: {arg_pasteid}  |  paste_url: {paste_url}  |  page_status_code: {res.status_code}\n')
+
+def getRawPaste(raw_url, *headers):
+    if not headers:
+        headers = default_headers
+    return requests.get(url=raw_url, headers=headers).text
+
 def main():
     
-    if arg_value and arg_pasteid:
-
-        paste_url = getUrl(arg_pasteid)
-        
-        if arg_extractinfo:
-            res = getPastePageBytes(paste_url)
-            
-            print(f'my_input: {arg_pasteid}  |  paste_url: {paste_url}  |  page_status_code: {res.status_code}\n')
-
-            if res.status_code == 200:
-                result_dict = pageParser(res)
-                for key,value in result_dict.items():
-                    print(f'{key}: {value}')
-        else:
-            print(f'my_input: {arg_pasteid}  |  paste_url: {paste_url}  |  page_status_code: N/A')
-            
+    if not arg_value: return 0
+    if not arg_pasteid: return 0
+    
+    paste_url = getUrl(arg_pasteid)
+    raw_url = getUrl("/raw/" + arg_pasteid)
+    
+    if arg_metadata: getInfoAboutPaste(paste_url, "print")
+    if arg_downloadRaw:
+        raw_paste_text= getRawPaste(raw_url)
+        print(raw_paste_text)
+    
 if __name__ == "__main__":
     main()
